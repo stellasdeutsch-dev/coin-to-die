@@ -1,0 +1,745 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>From Coin to Die</title>
+<meta name="description" content="Lecture 4 of Statistical Learning: the Dirichlet-multinomial model and conjugate priors, explained from zero with Dota 2 examples, a posterior calculator and practice problems.">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600;700&family=Montserrat:wght@400;500;600;700&family=STIX+Two+Text:ital,wght@0,500;1,500&display=swap">
+<style>
+/* Layout: bright renovation-landing look — airy white rooms, a wood-floor hero, green accents, wide uppercase headings, a measuring tape divider, charcoal cards only for the "rate" and "trap" grids. Single committed light look. */
+:root{
+  color-scheme:light;
+  --bg:#ffffff; --soft:#f5f5f3; --gray:#ecece9; --line:#e2e2de;
+  --ink:#2a2a2a; --ink-2:#686868; --charcoal:#3a3a3a; --charcoal-2:#474747;
+  --green:#5fa463; --green-2:#7cbd7e; --green-deep:#3c7d43; --green-pale:#eaf5e9;
+  --wood:#e8d6bb; --wood-2:#d9c09c;
+  --wide:"Unbounded", "Arial Black", sans-serif;
+  --body:"Montserrat", "Helvetica Neue", Arial, sans-serif;
+  --math:"STIX Two Text", "Times New Roman", serif;
+  --r-xl:30px; --r-l:20px; --r-m:14px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16.5px/1.65 var(--body);padding-left:max(14px,env(safe-area-inset-left,0px));padding-right:max(14px,env(safe-area-inset-right,0px));padding-block:14px 40px}
+[hidden]{display:none!important}
+p{margin:0}
+a{color:inherit}
+h1,h2,h3{margin:0;text-wrap:balance}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:20px;position:relative}
+.m{font-family:var(--math);font-style:italic;font-size:1.07em}
+.g{color:var(--green)}
+.wh{font-family:var(--wide);font-weight:600;text-transform:uppercase;letter-spacing:.01em;line-height:1.18;font-size:clamp(22px,3.2vw,36px)}
+.wh.center{text-align:center}
+.h3{font:700 19px/1.3 var(--body);letter-spacing:-.01em}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:10px;padding:16px 26px;font:700 12.5px var(--body);letter-spacing:.16em;text-transform:uppercase;text-decoration:none;cursor:pointer}
+.btn.green{background:linear-gradient(180deg,var(--green-2),var(--green));color:#fff;box-shadow:0 10px 24px rgba(95,164,99,.35)}
+.btn.line{background:#fff;color:var(--green-deep);border:1.5px solid var(--green)}
+.btn:focus-visible,button:focus-visible,summary:focus-visible,input:focus-visible,a:focus-visible{outline:3px solid var(--green-deep);outline-offset:2px}
+.section{display:flex;flex-direction:column;gap:24px;padding-block:clamp(40px,6vw,76px);padding-inline:clamp(4px,3vw,40px);position:relative}
+.kicker{font:600 12px var(--body);letter-spacing:.2em;text-transform:uppercase;color:var(--green-deep)}
+.center{align-items:center;text-align:center}
+.lead{color:var(--ink-2);max-width:62ch;font-size:clamp(16px,1.6vw,18px)}
+.leaf{position:absolute;border-radius:50%;filter:blur(28px);background:radial-gradient(circle,rgba(110,180,100,.55),rgba(110,180,100,0) 70%);pointer-events:none;z-index:0}
+.remember{background:var(--green-pale);border-left:4px solid var(--green);border-radius:var(--r-m);padding:16px 20px;font-size:16px}
+.remember b{color:var(--green-deep)}
+.frm{display:block;font-family:var(--math);font-style:italic;font-size:clamp(17px,2vw,21px);line-height:1.6;background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:12px 14px;text-align:center;overflow-x:auto}
+.frm.big{font-size:clamp(21px,2.8vw,30px)}
+
+/* cover + nav */
+.cover{text-align:center;padding-top:clamp(10px,2vw,24px)}
+.cover .t1{font:700 clamp(40px,8vw,104px)/0.95 var(--wide);letter-spacing:.01em;text-transform:uppercase}
+.cover .t2{font:500 clamp(28px,5.6vw,72px)/1.05 var(--wide);letter-spacing:.02em;text-transform:uppercase;color:#4a4a4a;margin-top:6px}
+.nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;display:flex;align-items:center;justify-content:space-between;gap:12px;background:rgba(255,255,255,.92);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid var(--line);border-radius:14px;padding:8px 8px 8px 16px;box-shadow:0 6px 20px rgba(0,0,0,.05)}
+.logo{display:flex;align-items:center;gap:8px;font:700 13px var(--wide);letter-spacing:.06em;text-transform:uppercase;text-decoration:none}
+.logo svg{width:16px;height:16px}
+.links{display:flex;gap:20px;font-size:13px;color:var(--ink-2)}
+.links a{text-decoration:none}
+.links a:hover{color:var(--green-deep)}
+.nav .meta{display:flex;flex-direction:column;align-items:flex-end;font-size:12px;line-height:1.3}
+.nav .meta b{font-size:13px}
+.nav .meta a{color:var(--green-deep);font-weight:600}
+
+/* hero room */
+.room{position:relative;border-radius:var(--r-xl);overflow:hidden;background:linear-gradient(180deg,#f3f3f1 0%,#ececea 62%,var(--wood) 62%,var(--wood-2) 100%);min-height:clamp(440px,52vw,620px);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;text-align:center;padding:clamp(40px,6vw,80px) clamp(16px,4vw,48px) 0}
+.room::before{content:"";position:absolute;inset:auto 0 0 0;height:38%;background:repeating-linear-gradient(90deg,rgba(255,255,255,.12) 0 2px,transparent 2px 140px);pointer-events:none}
+.room h1{position:relative;z-index:2;font:600 clamp(24px,3.4vw,40px)/1.25 var(--wide);text-transform:uppercase;letter-spacing:.01em;max-width:24ch}
+.room .sub{position:relative;z-index:2;margin-top:18px;font-size:15.5px;color:#4d4d4d;max-width:46ch}
+.room .sub b{color:var(--ink)}
+.room .btn{position:relative;z-index:2;margin-top:24px}
+.lamp{position:absolute;top:0;width:2px;background:#cfcfcb;z-index:1}
+.lamp::after{content:"";position:absolute;bottom:-34px;left:-26px;width:54px;height:36px;background:#fff;clip-path:polygon(30% 0,70% 0,100% 100%,0 100%);box-shadow:0 0 0 1px #e0e0dc}
+.lamp.l1{left:16%;height:90px}.lamp.l2{right:16%;height:70px}
+.furn{position:absolute;bottom:4%;z-index:1;width:clamp(120px,18vw,230px);height:auto}
+.furn.left{left:3%}.furn.right{right:3%}
+
+/* ruler */
+.rulerwrap{overflow:hidden;padding-block:14px}
+.ruler{width:104%;margin-left:-2%;height:auto;display:block;transform:rotate(-1.6deg);filter:drop-shadow(0 8px 14px rgba(0,0,0,.08))}
+
+/* start */
+.startgrid{display:grid;grid-template-columns:1.2fr 1fr;gap:16px}
+.box{background:#fff;border:1px solid var(--line);border-radius:var(--r-l);padding:clamp(20px,3.4vw,34px);display:flex;flex-direction:column;gap:14px;box-shadow:0 10px 30px rgba(0,0,0,.04);min-width:0}
+.box.green{background:var(--green-pale);border-color:#cfe6cd}
+.checks{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:9px}
+.checks li{display:flex;gap:10px;align-items:flex-start;font-size:15.5px}
+.checks li::before{content:"";flex-shrink:0;width:9px;height:9px;border-radius:50%;background:var(--green);margin-top:8px}
+
+/* stats */
+.counts{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
+.cnt{background:#fff;border:1px solid var(--line);border-radius:var(--r-l);padding:16px;display:flex;flex-direction:column;gap:6px;text-align:center;align-items:center}
+.cnt .av{width:56px;height:56px;border-radius:50%;display:grid;place-items:center;font:700 13px var(--wide);color:#fff}
+.cnt b{font:700 30px var(--wide)}
+.cnt span{font-size:13px;color:var(--ink-2)}
+.cnt small{font-size:12.5px;font-weight:600;color:var(--green-deep)}
+.cnt.zero small{color:#c0392b}
+
+/* tools */
+.tools{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.tool{background:#fff;border:1px solid var(--line);border-radius:var(--r-l);padding:clamp(18px,3vw,26px);display:flex;flex-direction:column;gap:12px;min-width:0}
+.tool.wide{grid-column:1 / -1}
+.tool .tn{font:600 11.5px var(--body);letter-spacing:.2em;text-transform:uppercase;color:var(--green-deep)}
+.tool p{font-size:15.5px;color:#454545}
+details{background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:12px 16px}
+summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;gap:14px;font-size:15px;font-weight:600}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"+";flex-shrink:0;width:24px;height:24px;border-radius:50%;border:1.5px solid #bdbdb8;display:grid;place-items:center;font-weight:500;color:#777;line-height:1}
+details[open] summary::after{content:"−";border-color:var(--green);color:var(--green-deep)}
+details .a{margin-top:10px;font-size:15px;color:#454545;display:flex;flex-direction:column;gap:6px}
+
+/* rate cards (charcoal) */
+.rates{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.rate{background:var(--charcoal);color:#f2f2f2;border-radius:var(--r-l);overflow:hidden;display:flex;flex-direction:column;min-width:0}
+.rate .ph{position:relative;height:118px;background:linear-gradient(180deg,#f1f1ee,#e2ddd3);display:grid;place-items:center}
+.rate .ph svg{width:70%;height:auto}
+.rate .tag{position:absolute;top:10px;right:10px;background:var(--green);color:#fff;font-size:11px;font-weight:700;border-radius:6px;padding:3px 8px}
+.rate .bd{padding:18px 16px 20px;display:flex;flex-direction:column;gap:10px;text-align:center}
+.rate h3{font:600 15px/1.3 var(--wide);text-transform:uppercase;letter-spacing:.02em}
+.rate p{font-size:13.5px;color:#d6d6d6}
+.rate .eq{font-family:var(--math);font-style:italic;font-size:17px;background:#fff;color:var(--ink);border-radius:8px;padding:8px;overflow-x:auto}
+
+/* derive */
+.derive{display:flex;flex-direction:column;background:#fff;border:1px solid var(--line);border-radius:var(--r-l);overflow:hidden}
+.drow{display:grid;grid-template-columns:92px minmax(0,1.2fr) minmax(0,1fr);gap:14px;padding:14px 18px;border-top:1px solid var(--line);align-items:baseline}
+.drow:first-child{border-top:0}
+.drow .k{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--green-deep)}
+.drow .eq{font-family:var(--math);font-style:italic;font-size:18px;overflow-x:auto;white-space:nowrap;padding-bottom:2px}
+.drow .why{font-size:14.5px;color:var(--ink-2)}
+.drow.ans{background:var(--green-pale)}
+.drow.ans .eq{font-weight:600}
+
+/* calculator */
+.calc{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);background:#fff;border:1px solid var(--line);border-radius:var(--r-xl);overflow:hidden;box-shadow:0 18px 40px rgba(0,0,0,.06)}
+.calc .lft{padding:clamp(18px,3vw,32px);display:flex;flex-direction:column;gap:16px;min-width:0}
+.calc .rgt{background:var(--soft);padding:clamp(18px,3vw,32px);display:flex;flex-direction:column;gap:14px;min-width:0}
+.calc h3{font:700 19px var(--body)}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chips button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:9px 13px;font:600 13px var(--body);cursor:pointer;color:var(--ink)}
+.chips button[aria-pressed="true"]{background:var(--charcoal);color:#fff;border-color:var(--charcoal)}
+.rolerow{display:grid;grid-template-columns:110px auto minmax(0,1fr);gap:12px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
+.rolerow:first-of-type{border-top:0}
+.rolerow .nm{font-weight:600;font-size:14px}
+.step{display:flex;align-items:center;gap:6px}
+.step button{width:30px;height:30px;border-radius:8px;border:1px solid var(--line);background:#fff;font:700 16px var(--body);cursor:pointer;color:var(--ink)}
+.step output{min-width:26px;text-align:center;font:700 16px var(--body);font-variant-numeric:tabular-nums}
+.bars{display:flex;flex-direction:column;gap:4px;min-width:0}
+.bar{position:relative;height:9px;border-radius:99px;background:var(--gray);overflow:hidden}
+.bar i{position:absolute;left:0;top:0;bottom:0;border-radius:99px;transition:width .3s}
+@media (prefers-reduced-motion:reduce){.bar i{transition:none}}
+.bar.post i{background:var(--green)}
+.bar.mle i{background:#bdbdb8}
+.bars small{font-size:11.5px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.out{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;justify-content:space-between;gap:10px;font-size:14px;align-items:baseline}
+.out b{font:700 17px var(--body);font-variant-numeric:tabular-nums;text-align:right}
+.out.big{background:var(--green-pale);border-color:#cfe6cd}
+.note2{font-size:13.5px;color:var(--ink-2)}
+.legend{display:flex;gap:14px;font-size:12.5px;color:var(--ink-2)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:16px;height:8px;border-radius:99px;display:inline-block}
+
+/* team-like role cards */
+.roles{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px}
+.role{display:flex;flex-direction:column;gap:8px}
+.role .pic{aspect-ratio:3/4;border-radius:var(--r-l);display:grid;place-items:center;overflow:hidden}
+.role .pic svg{width:70%;height:auto}
+.role b{font-size:15.5px}
+.role span{font-size:12.5px;color:var(--ink-2)}
+
+/* compare */
+.cmp{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.cmp .c{background:#fff;border:1px solid var(--line);border-radius:var(--r-l);padding:20px;display:flex;flex-direction:column;gap:8px}
+.cmp .c .t{font:600 13px var(--wide);text-transform:uppercase;letter-spacing:.03em}
+.cmp .c .n{font:700 34px var(--wide);color:var(--green-deep)}
+.cmp .c p{font-size:14.5px;color:var(--ink-2)}
+
+/* carousel */
+.car{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);background:#fff;border:1px solid var(--line);border-radius:var(--r-l);overflow:hidden;box-shadow:0 18px 40px rgba(0,0,0,.06);max-width:900px;margin:0 auto;width:100%}
+.car .pic{background:linear-gradient(160deg,#f2f2ef,#e4dfd4);display:grid;place-items:center;min-height:240px;padding:20px}
+.car .pic span{font:700 clamp(40px,6vw,64px) var(--wide);color:#cfc8ba}
+.car .txt{padding:clamp(18px,3vw,30px);display:flex;flex-direction:column;gap:10px}
+.car .txt b{font:700 18px var(--body)}
+.car .txt p{font-size:14.5px;color:#454545}
+.carnav{display:flex;align-items:center;justify-content:center;gap:16px;font:700 18px var(--wide)}
+.carnav button{width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:#fff;cursor:pointer;font-size:16px;color:var(--ink)}
+
+/* traps (charcoal) */
+.traps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.trap{background:var(--charcoal);color:#ededed;border-radius:var(--r-l);padding:20px;display:flex;flex-direction:column;gap:8px;min-height:150px}
+.trap b{font:600 13px/1.35 var(--wide);text-transform:uppercase;letter-spacing:.03em}
+.trap b em{font-style:normal;color:var(--green-2)}
+.trap span{font-size:14px;color:#cfcfcf}
+
+.twocol{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:18px;align-items:start}
+.prose{display:flex;flex-direction:column;gap:14px;max-width:66ch}
+.prose p{color:#454545}
+.tablewrap{overflow-x:auto;min-width:0;background:#fff;border:1px solid var(--line);border-radius:var(--r-l)}
+.table{width:100%;border-collapse:collapse;font-size:15px;min-width:620px;font-variant-numeric:tabular-nums}
+.table th{text-align:left;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);padding:10px 12px;font-weight:700}
+.table td{padding:11px 12px;border-top:1px solid var(--line)}
+.table tr.hl td{background:var(--green-pale);font-weight:600}
+.faq{display:flex;flex-direction:column;gap:10px;max-width:820px;width:100%;margin:0 auto;text-align:left}
+.faq details{background:#fff}
+
+/* practice */
+.probs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.prob{background:#fff;border:1px solid var(--line);border-radius:var(--r-l);padding:clamp(18px,3vw,26px);display:flex;flex-direction:column;gap:12px;min-width:0}
+.prob p{font-size:15px;color:#454545}
+.ptop{display:flex;align-items:center;gap:10px}
+.pn{font:700 13px var(--wide);color:var(--ink-2)}
+.lvl{font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:6px;letter-spacing:.04em}
+.l1{background:var(--green-pale);color:var(--green-deep)}.l2{background:#eef1f7;color:#3d5a8a}.l3{background:#fff2e5;color:#b25a12}.l4{background:var(--charcoal);color:#fff}
+.steps-l{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+
+/* final */
+.final{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px;align-items:center;background:linear-gradient(180deg,#f6f6f4,#ededea);border-radius:var(--r-xl);padding:clamp(24px,5vw,56px);position:relative;overflow:hidden}
+.final .box{gap:10px}
+.final ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px}
+.final li a{display:flex;justify-content:space-between;gap:10px;border:1.5px solid var(--green);border-radius:10px;padding:11px 14px;text-decoration:none;font-weight:600;font-size:14px;color:var(--green-deep)}
+footer{background:var(--charcoal);color:#e8e8e8;border-radius:var(--r-l);padding:18px 22px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:13px}
+footer b{font:700 12px var(--wide);letter-spacing:.06em;text-transform:uppercase}
+
+@media (max-width:980px){
+  .links,.nav .meta{display:none}
+  .startgrid,.calc,.twocol,.tools,.car,.final{grid-template-columns:1fr}
+  .rates{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .counts,.roles{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .cmp,.traps,.probs{grid-template-columns:1fr}
+  .drow{grid-template-columns:1fr;gap:4px}
+  .drow .eq{white-space:normal}
+  .furn{opacity:.5}
+}
+@media (max-width:560px){
+  .rates,.counts,.roles{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .rolerow{grid-template-columns:90px auto;}
+  .rolerow .bars{grid-column:1 / -1}
+  .furn{display:none}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="cover" id="top">
+    <div class="t1">Lecture 4</div>
+    <div class="t2">Dirichlet model</div>
+  </div>
+
+  <nav class="nav" aria-label="Page">
+    <a class="logo" href="#top"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1 15 14H1z" fill="#2a2a2a"/></svg>From coin to die</a>
+    <span class="links"><a href="#story">Story</a><a href="#toolbox">Toolbox</a><a href="#derive">Derivation</a><a href="#calc">Calculator</a><a href="#words">Bag of words</a><a href="#conjugate">Conjugate priors</a><a href="#practice">Practice</a></span>
+    <span class="meta"><b>Statistical Learning</b><a href="#practice">Practice problems</a></span>
+  </nav>
+
+  <!-- HERO ROOM -->
+  <section class="room" aria-label="Introduction">
+    <span class="lamp l1" aria-hidden="true"></span><span class="lamp l2" aria-hidden="true"></span>
+    <span class="leaf" style="width:280px;height:280px;left:-90px;top:30%" aria-hidden="true"></span>
+    <span class="leaf" style="width:240px;height:240px;right:-80px;top:10%" aria-hidden="true"></span>
+    <h1>The Dirichlet model: <span class="g">from a coin</span> to a K-sided die</h1>
+    <p class="sub">Lecture 3 learned <b>one</b> probability (hit or miss). Today we learn <b>a whole list</b> of them: which role the enemy picks first, which word comes in all-chat. Same idea, same one-line update. <b>Nothing assumed</b>; every tool is explained here.</p>
+    <a class="btn green" href="#story">Start the lecture</a>
+    <svg class="furn left" viewBox="0 0 220 200" aria-hidden="true"><ellipse cx="110" cy="190" rx="90" ry="8" fill="rgba(0,0,0,.08)"/><rect x="40" y="96" width="140" height="70" rx="26" fill="#f7f4ef"/><rect x="30" y="70" width="40" height="96" rx="20" fill="#efeae2"/><rect x="150" y="70" width="40" height="96" rx="20" fill="#efeae2"/><rect x="62" y="86" width="96" height="40" rx="16" fill="#fff"/><path d="M60 166 50 190M160 166 170 190" stroke="#c9b48f" stroke-width="5" stroke-linecap="round"/></svg>
+    <svg class="furn right" viewBox="0 0 200 220" aria-hidden="true"><ellipse cx="100" cy="212" rx="60" ry="7" fill="rgba(0,0,0,.08)"/><path d="M70 150h60l-8 60H78z" fill="#fff" stroke="#e3e0da"/><g fill="#5fa463"><ellipse cx="100" cy="90" rx="14" ry="56" transform="rotate(-8 100 90)"/><ellipse cx="72" cy="104" rx="12" ry="46" transform="rotate(-34 72 104)" fill="#7cbd7e"/><ellipse cx="128" cy="104" rx="12" ry="46" transform="rotate(32 128 104)" fill="#4f9455"/><ellipse cx="60" cy="130" rx="9" ry="30" transform="rotate(-62 60 130)" fill="#7cbd7e"/><ellipse cx="140" cy="130" rx="9" ry="30" transform="rotate(60 140 130)"/></g></svg>
+  </section>
+
+  <div class="rulerwrap" aria-hidden="true"><svg class="ruler" id="ruler1" viewBox="0 0 1200 78"></svg></div>
+
+  <!-- START -->
+  <section class="section">
+    <div class="startgrid">
+      <div class="box">
+        <span class="kicker">By the end of this lecture</span>
+        <h2 class="wh">You will be able to</h2>
+        <ul class="checks">
+          <li>explain a probability vector θ and the Dirichlet distribution with a Dota example</li>
+          <li>derive the posterior Dir(α₁ + N₁, …, α_K + N_K) line by line</li>
+          <li>compute the posterior mean, the MAP and the predictive, and fix the zero-count problem</li>
+          <li>answer the bag-of-words task from the 2025 final</li>
+          <li>name the conjugate prior for Bernoulli, Categorical, Exponential and Poisson data</li>
+        </ul>
+      </div>
+      <div class="box green">
+        <span class="kicker">What you need already</span>
+        <h3 class="h3">Nothing. The toolbox in Part 2 covers it all.</h3>
+        <p>If you did Lecture 3 (Beta-Binomial), today will feel familiar: it is the same story with more than two outcomes. If you didn't, that's fine; everything is explained again.</p>
+        <p><b>How to study:</b> read one part, close your eyes, say the green “remember it” line out loud.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- PART 1 STORY -->
+  <section class="section" id="story">
+    <span class="kicker">Part 1 · The question</span>
+    <h2 class="wh">20 matches against one captain. <span class="g">What will they first-pick?</span></h2>
+    <p class="lead">You keep playing against the same enemy captain. You write down which <b>role</b> they first-pick. There are K = 5 possible roles. After 20 matches:</p>
+    <div class="counts">
+      <div class="cnt"><span class="av" style="background:#c0392b">C</span><b>9</b><span>carry</span><small>9/20 = 0.45</small></div>
+      <div class="cnt"><span class="av" style="background:#2e86de">M</span><b>6</b><span>mid</span><small>6/20 = 0.30</small></div>
+      <div class="cnt"><span class="av" style="background:#8e44ad">O</span><b>3</b><span>offlane</span><small>3/20 = 0.15</small></div>
+      <div class="cnt"><span class="av" style="background:#16a085">S</span><b>2</b><span>soft support</span><small>2/20 = 0.10</small></div>
+      <div class="cnt zero"><span class="av" style="background:#7f8c8d">H</span><b>0</b><span>hard support</span><small>0/20 = 0 ?!</small></div>
+    </div>
+    <div class="twocol">
+      <div class="prose">
+        <p>The simple estimate (the MLE, “count ÷ total”) is shown under each role. It says the captain will <b>never</b> first-pick a hard support. Is that believable? After only 20 games, no. It just hasn't happened yet. This is the <b>zero-count problem</b> again, and it gets worse the more categories you have: with 120 heroes instead of 5 roles, most heroes would have count 0.</p>
+        <p>In Lecture 3 we fixed this for a coin (2 outcomes) with a Beta prior. Today we do it for a die with K outcomes. The prior is called the <b>Dirichlet</b> (say “dee-ree-KLAY”).</p>
+      </div>
+      <div class="box">
+        <span class="kicker">Two outcomes vs K outcomes</span>
+        <div class="tablewrap" style="border:0">
+          <table class="table" style="min-width:0">
+            <thead><tr><th></th><th>Lecture 3</th><th>Today</th></tr></thead>
+            <tbody>
+              <tr><td>data</td><td>hit / miss</td><td>one of K roles</td></tr>
+              <tr><td>unknown</td><td>one θ</td><td>θ₁, …, θ_K</td></tr>
+              <tr><td>likelihood</td><td>Binomial</td><td>Multinomial</td></tr>
+              <tr><td>prior</td><td>Beta(a, b)</td><td>Dir(α₁, …, α_K)</td></tr>
+              <tr><td>update</td><td>a + hits, b + misses</td><td>α_k + count_k</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <p class="remember"><b>Remember it:</b> Dirichlet is to a K-sided die what Beta is to a coin.</p>
+  </section>
+
+  <!-- PART 2 TOOLBOX -->
+  <section class="section" id="toolbox">
+    <span class="kicker">Part 2 · Toolbox</span>
+    <h2 class="wh">Five tools, <span class="g">each with a tiny example</span></h2>
+    <div class="tools">
+      <article class="tool">
+        <span class="tn">Tool 1 · A probability vector</span>
+        <h3 class="h3">θ = (θ₁, …, θ_K): one probability per outcome, adding to 1</h3>
+        <div class="frm">θ₁ + θ₂ + … + θ_K = 1, every θ_k ≥ 0</div>
+        <p>For the captain: θ = (θ_carry, θ_mid, θ_off, θ_soft, θ_hard), for example (0.4, 0.3, 0.15, 0.1, 0.05). The set of all such vectors is called the <b>probability simplex</b>. One draw from θ is a <b>Categorical</b> outcome.</p>
+        <details><summary>Try it: θ_carry = 0.4, θ_mid = 0.3, θ_off = 0.2, θ_soft = 0.05. What is θ_hard?</summary><div class="a"><p>1 − 0.95 = 0.05.</p></div></details>
+      </article>
+      <article class="tool">
+        <span class="tn">Tool 2 · The likelihood is a product of powers</span>
+        <h3 class="h3">Each match multiplies in its role's θ</h3>
+        <div class="frm">p(D | θ) = θ₁<sup>N₁</sup> · θ₂<sup>N₂</sup> · … · θ_K<sup>N_K</sup> = Π<sub>k</sub> θ_k<sup>N_k</sup></div>
+        <p>N_k is how often role k happened. Π means “multiply over all k”. Only the <b>counts</b> matter, not the order of the matches. The counts are called <b>sufficient statistics</b>: all you need to know about the data.</p>
+        <details><summary>Try it: write p(D | θ) for carry, mid, carry.</summary><div class="a"><p><span class="m">θ_carry² · θ_mid</span>.</p></div></details>
+      </article>
+      <article class="tool">
+        <span class="tn">Tool 3 · Constants don't matter (∝)</span>
+        <h3 class="h3">The multinomial coefficient drops out</h3>
+        <div class="frm">Mult(N₁, …, N_K | θ) = N! / (N₁! ⋯ N_K!) · Π θ_k<sup>N_k</sup></div>
+        <p>If you only know the counts, the probability gets a counting factor N!/(N₁!⋯N_K!): the number of orders (like C(n, k) for a coin). It has no θ in it, so for the posterior we drop it and write ∝.</p>
+      </article>
+      <article class="tool">
+        <span class="tn">Tool 4 · The Dirichlet distribution</span>
+        <h3 class="h3">A belief about a whole probability vector</h3>
+        <div class="frm">Dir(θ | α) = (1/B(α)) · Π<sub>k</sub> θ_k<sup>α_k − 1</sup></div>
+        <p>α = (α₁, …, α_K) are positive numbers, the <b>pseudo-counts</b>: “as if I had already seen α_k − 1 picks of role k”. B(α) only makes the total 1. With K = 2 it is exactly the Beta distribution.</p>
+        <details><summary>Try it: what does Dir(1, 1, 1, 1, 1) believe?</summary><div class="a"><p>Every probability vector is equally believable: the flat “no idea” prior, like Beta(1, 1).</p></div></details>
+      </article>
+      <article class="tool wide">
+        <span class="tn">Tool 5 · Three numbers to read off a Dirichlet</span>
+        <h3 class="h3">α₀, the mean and the strength</h3>
+        <div class="frm">α₀ = α₁ + … + α_K, &nbsp;&nbsp; E[θ_k] = α_k / α₀</div>
+        <p>α₀ is the <b>strength</b> of the belief (the equivalent sample size). Dir(2, 2, 2, 2, 2) and Dir(20, 20, 20, 20, 20) both have mean 1/5 for every role, but the second is worth 100 pseudo-matches and is much more certain. Same rule as Lecture 3: bigger total, narrower belief.</p>
+      </article>
+    </div>
+    <p class="remember"><b>Remember it:</b> θ is a list of probabilities that add to 1; the likelihood is Π θ_k<sup>N_k</sup>; the Dirichlet Π θ_k<sup>α_k−1</sup> is a belief about that list; mean α_k/α₀.</p>
+  </section>
+
+  <!-- PART 3 RATES -->
+  <section class="section center">
+    <span class="kicker">Part 3 · The four pieces</span>
+    <h2 class="wh">Pick your piece. <span class="g">Each costs exactly one line.</span></h2>
+    <div class="rates" style="width:100%;text-align:left">
+      <div class="rate">
+        <div class="ph"><span class="tag">data</span><svg viewBox="0 0 120 70" aria-hidden="true"><g fill="#3a3a3a"><rect x="10" y="30" width="16" height="36" rx="3"/><rect x="32" y="40" width="16" height="26" rx="3"/><rect x="54" y="52" width="16" height="14" rx="3"/><rect x="76" y="56" width="16" height="10" rx="3"/></g><rect x="98" y="64" width="16" height="2" rx="1" fill="#c0392b"/></svg></div>
+        <div class="bd"><h3>Likelihood</h3><div class="eq">Π θ_k<sup>N_k</sup></div><p>What the counts say. The multinomial constant drops.</p></div>
+      </div>
+      <div class="rate">
+        <div class="ph"><span class="tag">belief</span><svg viewBox="0 0 120 70" aria-hidden="true"><g fill="#7cbd7e"><rect x="10" y="40" width="16" height="26" rx="3"/><rect x="32" y="40" width="16" height="26" rx="3"/><rect x="54" y="40" width="16" height="26" rx="3"/><rect x="76" y="40" width="16" height="26" rx="3"/><rect x="98" y="40" width="16" height="26" rx="3"/></g></svg></div>
+        <div class="bd"><h3>Prior</h3><div class="eq">Π θ_k<sup>α_k − 1</sup></div><p>Dirichlet: pseudo-counts α_k before any match.</p></div>
+      </div>
+      <div class="rate">
+        <div class="ph"><span class="tag">updated</span><svg viewBox="0 0 120 70" aria-hidden="true"><g fill="#5fa463"><rect x="10" y="26" width="16" height="40" rx="3"/><rect x="32" y="36" width="16" height="30" rx="3"/><rect x="54" y="46" width="16" height="20" rx="3"/><rect x="76" y="50" width="16" height="16" rx="3"/><rect x="98" y="58" width="16" height="8" rx="3"/></g></svg></div>
+        <div class="bd"><h3>Posterior</h3><div class="eq">Dir(α_k + N_k)</div><p>Add each count to its α. Derivation in Part 4.</p></div>
+      </div>
+      <div class="rate">
+        <div class="ph"><span class="tag">next match</span><svg viewBox="0 0 120 70" aria-hidden="true"><circle cx="60" cy="38" r="24" fill="none" stroke="#3a3a3a" stroke-width="6"/><path d="M60 38 L60 20 M60 38 L74 46" stroke="#5fa463" stroke-width="6" stroke-linecap="round"/></svg></div>
+        <div class="bd"><h3>Predictive</h3><div class="eq">(α_k + N_k)/(α₀ + N)</div><p>Chance that the next pick is role k. Never exactly 0.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="rulerwrap" aria-hidden="true"><svg class="ruler" id="ruler2" viewBox="0 0 1200 78"></svg></div>
+
+  <!-- PART 4 DERIVATION -->
+  <section class="section" id="derive">
+    <span class="kicker">Part 4 · The derivation</span>
+    <h2 class="wh">Prior Dir(α) <span class="g">+ counts N₁, …, N_K</span></h2>
+    <div class="derive">
+      <div class="drow"><span class="k">Bayes</span><span class="eq">p(θ | D) ∝ p(D | θ) · p(θ)</span><span class="why">posterior ∝ likelihood × prior; the bottom line p(D) has no θ</span></div>
+      <div class="drow"><span class="k">plug in</span><span class="eq">∝ Π<sub>k</sub> θ_k<sup>N_k</sup> · Π<sub>k</sub> θ_k<sup>α_k − 1</sup></span><span class="why">Tool 2 times Tool 4; constants dropped (Tool 3)</span></div>
+      <div class="drow"><span class="k">same base</span><span class="eq">= Π<sub>k</sub> θ_k<sup>N_k</sup> θ_k<sup>α_k − 1</sup></span><span class="why">put the two θ_k of each role next to each other</span></div>
+      <div class="drow"><span class="k">add powers</span><span class="eq">= Π<sub>k</sub> θ_k<sup>α_k + N_k − 1</sup></span><span class="why">θ<sup>a</sup>θ<sup>b</sup> = θ<sup>a+b</sup></span></div>
+      <div class="drow ans"><span class="k">read off</span><span class="eq">θ | D ~ Dir(α₁ + N₁, …, α_K + N_K)</span><span class="why">a Dirichlet shape with new exponents (+1)</span></div>
+    </div>
+    <div class="twocol">
+      <div class="prose">
+        <p><b>In words:</b> add each role's count to its α. That's the whole update, exactly like hits → a and misses → b for the coin.</p>
+        <p><b>Conjugate:</b> Dirichlet prior in, Dirichlet posterior out. That's why the Dirichlet is the standard prior for categorical data.</p>
+      </div>
+      <div class="box">
+        <span class="kicker">Our captain, flat prior Dir(1, 1, 1, 1, 1)</span>
+        <div class="frm">Dir(1+9, 1+6, 1+3, 1+2, 1+0) = Dir(10, 7, 4, 3, 1)</div>
+        <p class="note2">α₀ after the update = 25 = 5 (prior) + 20 (matches).</p>
+      </div>
+    </div>
+    <p class="remember"><b>Remember it:</b> Dirichlet prior × multinomial likelihood = Dirichlet posterior: α_k + N_k.</p>
+  </section>
+
+  <!-- CALCULATOR -->
+  <section class="section center" id="calc">
+    <span class="kicker">Part 5 · Calculator</span>
+    <h2 class="wh"><span class="g">Posterior calculator</span> for the captain</h2>
+    <div class="calc" style="width:100%;text-align:left">
+      <div class="lft">
+        <h3>Prior strength (same α for every role)</h3>
+        <div class="chips" role="group" aria-label="Prior alpha" id="alphaChips">
+          <button type="button" data-a="1" aria-pressed="true">α = 1 · flat</button>
+          <button type="button" data-a="2" aria-pressed="false">α = 2</button>
+          <button type="button" data-a="5" aria-pressed="false">α = 5</button>
+          <button type="button" data-a="20" aria-pressed="false">α = 20 · strong</button>
+        </div>
+        <h3>Matches seen (counts)</h3>
+        <div class="legend"><span><i style="background:var(--green)"></i>posterior mean / predictive</span><span><i style="background:#bdbdb8"></i>MLE count ÷ N</span></div>
+        <div id="rolesCalc"></div>
+      </div>
+      <div class="rgt">
+        <h3>Result</h3>
+        <div class="out big"><span>posterior</span><b id="oPost">Dir(10, 7, 4, 3, 1)</b></div>
+        <div class="out"><span>α₀ (prior) + N (matches)</span><b id="oSum">5 + 20 = 25</b></div>
+        <div class="out"><span>P(next pick = hard support)</span><b id="oHard">0.04</b></div>
+        <div class="out"><span>MLE for hard support</span><b id="oHardMle">0.00</b></div>
+        <div class="out"><span>MAP for carry</span><b id="oMap">0.45</b></div>
+        <p class="note2" id="oNote"></p>
+        <a class="btn green" href="#numbers">How these are computed</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- PART 6 NUMBERS -->
+  <section class="section" id="numbers">
+    <span class="kicker">Part 6 · Three numbers from the posterior</span>
+    <h2 class="wh">Mean, MAP, MLE <span class="g">for each role</span></h2>
+    <p class="lead">Write the posterior as Dir(α′) with α′_k = α_k + N_k and α′₀ = α₀ + N. Then, for each role k:</p>
+    <div class="cmp">
+      <div class="c"><span class="t">Posterior mean</span><span class="frm">(α_k + N_k) / (α₀ + N)</span><p>The balance point. It is also the <b>predictive</b>: the chance that the next pick is role k.</p></div>
+      <div class="c"><span class="t">MAP (peak)</span><span class="frm">(N_k + α_k − 1) / (N + α₀ − K)</span><p>The single most believable vector. Like the MLE with α_k − 1 pseudo-counts added.</p></div>
+      <div class="c"><span class="t">MLE</span><span class="frm">N_k / N</span><p>Data only. With a flat prior (all α_k = 1) the MAP equals the MLE.</p></div>
+    </div>
+    <div class="tablewrap">
+      <table class="table">
+        <thead><tr><th>role</th><th>count</th><th>MLE N_k/N</th><th>mean, α = 1</th><th>mean, α = 2</th><th>MAP, α = 2</th></tr></thead>
+        <tbody>
+          <tr><td>carry</td><td>9</td><td>0.45</td><td>10/25 = 0.40</td><td>11/30 ≈ 0.37</td><td>10/25 = 0.40</td></tr>
+          <tr><td>mid</td><td>6</td><td>0.30</td><td>7/25 = 0.28</td><td>8/30 ≈ 0.27</td><td>7/25 = 0.28</td></tr>
+          <tr><td>offlane</td><td>3</td><td>0.15</td><td>4/25 = 0.16</td><td>5/30 ≈ 0.17</td><td>4/25 = 0.16</td></tr>
+          <tr><td>soft support</td><td>2</td><td>0.10</td><td>3/25 = 0.12</td><td>4/30 ≈ 0.13</td><td>3/25 = 0.12</td></tr>
+          <tr class="hl"><td>hard support</td><td>0</td><td>0 ✗</td><td>1/25 = 0.04</td><td>2/30 ≈ 0.07</td><td>1/25 = 0.04</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="twocol">
+      <div class="prose">
+        <p><b>Where does the MAP formula come from?</b> You maximise <span class="m">Σ (N_k + α_k − 1) log θ_k</span>, but the θ's must add up to 1, so you can't move each one freely. The slides handle this with a <b>Lagrange multiplier</b> λ, a trick for “maximise under a constraint”. The result is θ_k ∝ N_k + α_k − 1, then you divide by the total so everything adds to 1. That total is N + α₀ − K.</p>
+      </div>
+      <div class="prose">
+        <p><b>Why is the predictive the posterior mean?</b> Lump all other roles into “not k”. Then θ_k behaves like a coin's probability, with a Beta(α′_k, α′₀ − α′_k) belief. The chance of “k” next is that Beta's mean, α′_k/α′₀. Exactly Lecture 3's rule.</p>
+      </div>
+    </div>
+    <p class="remember"><b>Remember it:</b> predictive = (α_k + N_k)/(α₀ + N). With α_k = 1 this is <b>add-one smoothing</b>: no outcome is ever impossible.</p>
+  </section>
+
+  <!-- ROLES (team) -->
+  <section class="section center">
+    <span class="kicker">The answer for the captain</span>
+    <h2 class="wh">Next first pick, <span class="g">flat prior</span></h2>
+    <div class="roles" style="width:100%;text-align:left">
+      <div class="role"><div class="pic" style="background:#f6e3e0"><svg viewBox="0 0 80 80" aria-hidden="true"><circle cx="40" cy="40" r="34" fill="#c0392b"/><text x="40" y="49" text-anchor="middle" font-family="Unbounded" font-size="24" fill="#fff">C</text></svg></div><b>Carry · 40%</b><span>10/25</span></div>
+      <div class="role"><div class="pic" style="background:#e1ecf8"><svg viewBox="0 0 80 80" aria-hidden="true"><circle cx="40" cy="40" r="34" fill="#2e86de"/><text x="40" y="49" text-anchor="middle" font-family="Unbounded" font-size="24" fill="#fff">M</text></svg></div><b>Mid · 28%</b><span>7/25</span></div>
+      <div class="role"><div class="pic" style="background:#efe4f4"><svg viewBox="0 0 80 80" aria-hidden="true"><circle cx="40" cy="40" r="34" fill="#8e44ad"/><text x="40" y="49" text-anchor="middle" font-family="Unbounded" font-size="24" fill="#fff">O</text></svg></div><b>Offlane · 16%</b><span>4/25</span></div>
+      <div class="role"><div class="pic" style="background:#dff1ec"><svg viewBox="0 0 80 80" aria-hidden="true"><circle cx="40" cy="40" r="34" fill="#16a085"/><text x="40" y="49" text-anchor="middle" font-family="Unbounded" font-size="24" fill="#fff">S</text></svg></div><b>Soft support · 12%</b><span>3/25</span></div>
+      <div class="role"><div class="pic" style="background:#eceeee"><svg viewBox="0 0 80 80" aria-hidden="true"><circle cx="40" cy="40" r="34" fill="#7f8c8d"/><text x="40" y="49" text-anchor="middle" font-family="Unbounded" font-size="24" fill="#fff">H</text></svg></div><b>Hard support · 4%</b><span>1/25, not 0</span></div>
+    </div>
+  </section>
+
+  <!-- PART 7 BAG OF WORDS -->
+  <section class="section" id="words">
+    <span class="kicker">Part 7 · The exam task (2025 Final, Task 6(a))</span>
+    <h2 class="wh">Bag of words <span class="g">in Dota all-chat</span></h2>
+    <div class="twocol">
+      <div class="prose">
+        <p><b>The task:</b> predict the next word based only on how often each word appeared. That is the <b>bag-of-words model</b>: every word is an independent draw from a Categorical(θ) over the vocabulary; the order of words is ignored.</p>
+        <p><b>Vocabulary</b> (K = 5): gg, wp, ez, ?, glhf. <b>Chat seen</b>: “gg wp gg ez gg ? gg wp”. Counts: gg 4, wp 2, ez 1, ? 1, glhf 0. N = 8.</p>
+        <p><b>Exam answer in three lines:</b> model Categorical / multinomial; prior Dir(α); posterior Dir(α + N). With a flat prior:</p>
+      </div>
+      <div class="derive">
+        <div class="drow"><span class="k">posterior</span><span class="eq">Dir(1+4, 1+2, 1+1, 1+1, 1+0) = Dir(5, 3, 2, 2, 1)</span><span class="why">add counts to α</span></div>
+        <div class="drow"><span class="k">total</span><span class="eq">α′₀ = 5 + 8 = 13</span><span class="why">prior strength + words seen</span></div>
+        <div class="drow ans"><span class="k">P(gg next)</span><span class="eq">5/13 ≈ 0.38</span><span class="why">MLE would say 4/8 = 0.5</span></div>
+        <div class="drow ans"><span class="k">P(glhf next)</span><span class="eq">1/13 ≈ 0.08</span><span class="why">MLE would say 0: impossible</span></div>
+      </div>
+    </div>
+    <div class="box">
+      <span class="kicker">The follow-up questions on the same exam</span>
+      <p>2025 Task 6(b) asked: if the next word should depend on the <b>last</b> word, what model is that? A <b>Markov chain</b> (Day 15). And the 2026 true/false: “bag of words is a good model to predict the next word in a stream of text” is <b>false</b>: it ignores order.</p>
+    </div>
+    <p class="remember"><b>Remember it:</b> bag of words = Categorical words, Dirichlet prior, posterior α + counts, predictive (α_k + N_k)/(α₀ + N).</p>
+  </section>
+
+  <div class="rulerwrap" aria-hidden="true"><svg class="ruler" id="ruler3" viewBox="0 0 1200 78"></svg></div>
+
+  <!-- PART 8 MULTINOMIAL PMF -->
+  <section class="section">
+    <span class="kicker">Part 8 · Probability of counts (Week 3, Question 3)</span>
+    <h2 class="wh">When θ is known: <span class="g">the multinomial</span></h2>
+    <div class="twocol">
+      <div class="prose">
+        <p>Sometimes the task gives you θ and asks for the probability of a set of counts. Suppose the captain's first picks are carry 0.3, mid 0.3, offlane 0.2, support 0.2. What is the chance of exactly 4 carries, 3 mids, 1 offlane and 2 supports in 10 matches?</p>
+        <div class="frm">P = N! / (N₁! N₂! ⋯ N_K!) · θ₁<sup>N₁</sup> ⋯ θ_K<sup>N_K</sup></div>
+        <p>The fraction counts how many orders give these counts; the product is the chance of one such order.</p>
+      </div>
+      <div class="derive">
+        <div class="drow"><span class="k">orders</span><span class="eq">10!/(4! 3! 1! 2!) = 12 600</span><span class="why">3 628 800 / (24 · 6 · 1 · 2)</span></div>
+        <div class="drow"><span class="k">one order</span><span class="eq">0.3⁴ · 0.3³ · 0.2¹ · 0.2² = 0.3⁷ · 0.2³</span><span class="why">powers of the same number add up</span></div>
+        <div class="drow ans"><span class="k">result</span><span class="eq">12 600 · 0.0002187 · 0.008 ≈ 0.022</span><span class="why">about 2%</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PART 9 CONJUGATE -->
+  <section class="section" id="conjugate">
+    <span class="kicker">Part 9 · Conjugate priors recap</span>
+    <h2 class="wh">One pattern <span class="g">for every model</span></h2>
+    <p class="lead">A prior is <b>conjugate</b> to a likelihood if the posterior is in the same family as the prior. Then updating is just “prior numbers + data summaries”. Week 4's “one formula to rule them all” says exactly this for the whole exponential family: new hyperparameters = old ones + the sufficient statistics of the data.</p>
+    <div class="tablewrap">
+      <table class="table">
+        <thead><tr><th>data (likelihood)</th><th>conjugate prior</th><th>posterior</th><th>Dota example</th></tr></thead>
+        <tbody>
+          <tr><td>Bernoulli / Binomial: k hits in n</td><td>Beta(a, b)</td><td>Beta(a + k, b + n − k)</td><td>Mirana arrows</td></tr>
+          <tr><td>Geometric: losses kᵢ before a win</td><td>Beta(a, b)</td><td>Beta(a + n, b + Σkᵢ)</td><td>games before a win</td></tr>
+          <tr class="hl"><td>Categorical / Multinomial: counts N_k</td><td>Dir(α)</td><td>Dir(α + N)</td><td>first-pick role, chat words</td></tr>
+          <tr><td>Exponential: waits xᵢ</td><td>Gamma(a, b)</td><td>Gamma(a + n, b + Σxᵢ)</td><td>minutes between ganks</td></tr>
+          <tr><td>Poisson: counts xᵢ</td><td>Gamma(a, b)</td><td>Gamma(a + Σxᵢ, b + n)</td><td>kills per game</td></tr>
+          <tr><td>Gaussian mean (σ² known)</td><td>Gaussian</td><td>Gaussian (Day 8)</td><td>last hits</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="twocol">
+      <div class="prose">
+        <p><b>Worked Gamma example (Week 4, Question 1).</b> Minutes between enemy ganks follow Exponential(λ). The 2026 formula sheet gives the Gamma density <span class="m">f(λ | a, b) = bᵃ Γ(a)⁻¹ λ<sup>a−1</sup> e<sup>−λb</sup></span> and its mean <span class="m">a/b</span>.</p>
+        <p>Prior Gamma(2, 8): mean 2/8 = 0.25 ganks per minute. Data: 2, 5, 3, 6 minutes (n = 4, Σx = 16).</p>
+      </div>
+      <div class="derive">
+        <div class="drow"><span class="k">likelihood</span><span class="eq">λ<sup>n</sup> e<sup>−λΣxᵢ</sup></span><span class="why">product of λe<sup>−λxᵢ</sup></span></div>
+        <div class="drow"><span class="k">× prior</span><span class="eq">λ<sup>a−1</sup> e<sup>−bλ</sup> · λ<sup>n</sup> e<sup>−λΣxᵢ</sup> = λ<sup>a+n−1</sup> e<sup>−(b+Σxᵢ)λ</sup></span><span class="why">add powers of λ and exponents of e</span></div>
+        <div class="drow ans"><span class="k">read off</span><span class="eq">Gamma(a + n, b + Σxᵢ) = Gamma(6, 24)</span><span class="why">mean 6/24 = 0.25</span></div>
+      </div>
+    </div>
+    <p class="remember"><b>Remember it:</b> conjugate = same family before and after. Posterior numbers = prior numbers + data summaries (counts, sums, n).</p>
+  </section>
+
+  <!-- CAROUSEL -->
+  <section class="section center">
+    <span class="kicker">What the exams say</span>
+    <h2 class="wh">Real tasks <span class="g">from the finals</span></h2>
+    <div class="carnav"><button type="button" id="cPrev" aria-label="Previous task">‹</button><span id="cIdx">1/4</span><button type="button" id="cNext" aria-label="Next task">›</button></div>
+    <div class="car" style="text-align:left" aria-live="polite">
+      <div class="pic"><span id="cYear">2025</span></div>
+      <div class="txt"><b id="cTitle"></b><p id="cText"></p></div>
+    </div>
+  </section>
+
+  <!-- PART 10 HEART -->
+  <section class="section" id="heart">
+    <span class="kicker">Part 10 · Learn it by heart</span>
+    <h2 class="wh">Six traps <span class="g">and five questions</span></h2>
+    <div class="traps">
+      <div class="trap"><b>Trap 1 · <em>α₀ vs N</em></b><span>The predictive divides by α₀ + N (prior total + data total), not by N.</span></div>
+      <div class="trap"><b>Trap 2 · <em>MAP has −K</em></b><span>MAP: (N_k + α_k − 1)/(N + α₀ − K). The −1 is per role, so the bottom loses K.</span></div>
+      <div class="trap"><b>Trap 3 · <em>Order is ignored</em></b><span>Bag of words throws away word order. For “next word after this word” use a Markov chain.</span></div>
+      <div class="trap"><b>Trap 4 · <em>Constants</em></b><span>N!/(N₁!⋯N_K!) matters for the probability of counts, but not for the posterior shape.</span></div>
+      <div class="trap"><b>Trap 5 · <em>K = 2</em></b><span>A Dirichlet with two components is a Beta. Don't learn two theories.</span></div>
+      <div class="trap"><b>Trap 6 · <em>Flat prior</em></b><span>Dir(1, …, 1): MAP = MLE, but the predictive is still smoothed: (N_k + 1)/(N + K).</span></div>
+    </div>
+    <h3 class="h3">Explain it back. Answer out loud first.</h3>
+    <div class="faq">
+      <details><summary>What is a Dirichlet distribution, in one sentence?</summary><div class="a"><p>A belief about a whole list of probabilities that add to 1, shaped like Π θ_k<sup>α_k−1</sup>, where α_k act as pseudo-counts.</p></div></details>
+      <details><summary>Why do the counts get added to α?</summary><div class="a"><p>Likelihood Π θ_k<sup>N_k</sup> times prior Π θ_k<sup>α_k−1</sup>: powers of the same θ_k add, giving θ_k<sup>α_k+N_k−1</sup>, a Dirichlet with α_k + N_k.</p></div></details>
+      <details><summary>How does the Dirichlet fix the zero-count problem?</summary><div class="a"><p>The predictive is (α_k + N_k)/(α₀ + N). Even with N_k = 0, α_k &gt; 0 keeps it above zero: hard support gets 1/25, not 0.</p></div></details>
+      <details><summary>What is the link between Dirichlet and Beta?</summary><div class="a"><p>Beta is the Dirichlet with K = 2. And any single component θ_j of a Dirichlet follows Beta(α_j, α₀ − α_j).</p></div></details>
+      <details><summary>What does “conjugate prior” mean, and name three pairs.</summary><div class="a"><p>Same family before and after the update. Beta–Binomial, Dirichlet–Multinomial, Gamma–Exponential (or Gamma–Poisson).</p></div></details>
+    </div>
+  </section>
+
+  <!-- PRACTICE -->
+  <section class="section" id="practice">
+    <span class="kicker">Practice · 30–40 min</span>
+    <h2 class="wh">Practice problems. <span class="g">Paper first.</span></h2>
+    <div class="probs">
+      <article class="prob">
+        <div class="ptop"><span class="pn">01</span><span class="lvl l1">Easy</span></div>
+        <h3 class="h3">Mid lane results</h3>
+        <p>Your mid lane ends in win, draw or loss. Prior Dir(1, 1, 1). Over 10 games: 5 wins, 3 draws, 2 losses. Give the posterior and the predictive for each outcome.</p>
+        <details><summary>Hint</summary><div class="a"><p>Add counts to α; divide by α₀ + N = 3 + 10.</p></div></details>
+        <details><summary>Solution</summary><div class="a"><ul class="steps-l"><li>Posterior Dir(6, 4, 3)</li><li>Predictive: win 6/13 ≈ 0.46, draw 4/13 ≈ 0.31, loss 3/13 ≈ 0.23</li></ul></div></details>
+      </article>
+      <article class="prob">
+        <div class="ptop"><span class="pn">02</span><span class="lvl l1">Easy</span></div>
+        <h3 class="h3">Reading a Dirichlet</h3>
+        <p>(a) What is Dir(a, b) with K = 2? (b) Compare Dir(1, 1, 1) and Dir(10, 10, 10): mean and certainty. (c) Mean of θ₁ under Dir(6, 3, 1)?</p>
+        <details><summary>Hint</summary><div class="a"><p>Mean α_k/α₀; α₀ is the strength.</p></div></details>
+        <details><summary>Solution</summary><div class="a"><ul class="steps-l"><li>(a) Beta(a, b)</li><li>(b) Both have mean 1/3 for each part; Dir(10, 10, 10) is worth 30 pseudo-observations and is much more certain.</li><li>(c) 6/10 = 0.6</li></ul></div></details>
+      </article>
+      <article class="prob">
+        <div class="ptop"><span class="pn">03</span><span class="lvl l2">Medium</span></div>
+        <h3 class="h3">Power runes at 6:00</h3>
+        <p>You track 4 rune types (DD, haste, illusion, regen) over 12 games: 5, 4, 3, 0. (a) MLE for regen? (b) With Dir(1, 1, 1, 1), the chance the next rune is regen?</p>
+        <details><summary>Hint</summary><div class="a"><p>(N_k + 1)/(N + K).</p></div></details>
+        <details><summary>Solution</summary><div class="a"><ul class="steps-l"><li>(a) 0/12 = 0, “regen never spawns”</li><li>(b) Posterior Dir(6, 5, 4, 1), predictive 1/16 ≈ 0.06</li></ul></div></details>
+      </article>
+      <article class="prob">
+        <div class="ptop"><span class="pn">04</span><span class="lvl l2">Medium</span></div>
+        <h3 class="h3">MAP versus mean</h3>
+        <p>Captain counts 9, 6, 3, 2, 0 with prior α_k = 2 for all five roles. Compute the MAP and the posterior mean for carry and hard support.</p>
+        <details><summary>Hint</summary><div class="a"><p>N = 20, α₀ = 10, K = 5.</p></div></details>
+        <details><summary>Solution</summary><div class="a"><ul class="steps-l"><li>MAP: (N_k + 1)/25 → carry 10/25 = 0.40, hard 1/25 = 0.04</li><li>Mean: (N_k + 2)/30 → carry 11/30 ≈ 0.37, hard 2/30 ≈ 0.07</li></ul></div></details>
+      </article>
+      <article class="prob">
+        <div class="ptop"><span class="pn">05</span><span class="lvl l2">Medium · Week 3 Q3</span></div>
+        <h3 class="h3">Probability of counts</h3>
+        <p>First-pick probabilities: carry 0.5, mid 0.3, other 0.2. In 6 matches, what is the chance of exactly 3 carry, 2 mid, 1 other?</p>
+        <details><summary>Hint</summary><div class="a"><p>6!/(3! 2! 1!) = 60.</p></div></details>
+        <details><summary>Solution</summary><div class="a"><ul class="steps-l"><li>60 · 0.5³ · 0.3² · 0.2 = 60 · 0.125 · 0.09 · 0.2</li><li>= 0.135</li></ul></div></details>
+      </article>
+      <article class="prob">
+        <div class="ptop"><span class="pn">06</span><span class="lvl l3">Exam-style · 2025 Final 6(a)</span></div>
+        <h3 class="h3">All-chat bag of words</h3>
+        <p>Vocabulary {gg, wp, ez, ?, glhf}. Chat: “gg ez gg wp gg ?”. State the model, the prior and the posterior, and give P(next word = gg) and P(next word = glhf) with a flat prior.</p>
+        <details><summary>Hint</summary><div class="a"><p>Counts 3, 1, 1, 1, 0; α₀ + N = 5 + 6.</p></div></details>
+        <details><summary>Solution</summary><div class="a"><ul class="steps-l"><li>Model: words iid Categorical(θ) (bag of words). Prior Dir(α). Posterior Dir(α + N).</li><li>Flat: Dir(4, 2, 2, 2, 1), total 11</li><li>gg 4/11 ≈ 0.36, glhf 1/11 ≈ 0.09</li></ul></div></details>
+      </article>
+      <article class="prob">
+        <div class="ptop"><span class="pn">07</span><span class="lvl l3">Exam-style · formula sheet</span></div>
+        <h3 class="h3">Gamma prior for gank rate</h3>
+        <p>Waits between ganks ~ Exponential(λ), prior λ ~ Gamma(a, b) with density ∝ λ<sup>a−1</sup>e<sup>−bλ</sup>. (a) Derive the posterior for waits x₁, …, xₙ. (b) a = 3, b = 10, waits 4, 6, 5, 5: posterior and its mean.</p>
+        <details><summary>Hint</summary><div class="a"><p>Likelihood λⁿ e<sup>−λΣx</sup>. Gamma mean a/b.</p></div></details>
+        <details><summary>Solution</summary><div class="a"><ul class="steps-l"><li>(a) λ<sup>a+n−1</sup>e<sup>−(b+Σx)λ</sup> → Gamma(a + n, b + Σx)</li><li>(b) n = 4, Σx = 20 → Gamma(7, 30), mean 7/30 ≈ 0.23 ganks per minute</li></ul></div></details>
+      </article>
+      <article class="prob">
+        <div class="ptop"><span class="pn">08</span><span class="lvl l4">Challenge</span></div>
+        <h3 class="h3">One role versus the rest</h3>
+        <p>Posterior Dir(10, 7, 4, 3, 1). (a) Which Beta describes θ_carry alone? (b) Use it to get P(next pick = carry). (c) P(the next two picks are both carry)?</p>
+        <details><summary>Hint</summary><div class="a"><p>Lump the others into “not carry”: α′₀ − α′_carry = 15.</p></div></details>
+        <details><summary>Solution</summary><div class="a"><ul class="steps-l"><li>(a) Beta(10, 15)</li><li>(b) 10/25 = 0.40</li><li>(c) 10/25 · 11/26 ≈ 0.169 (update after the first carry, as in Lecture 3)</li></ul></div></details>
+      </article>
+    </div>
+  </section>
+
+  <!-- FINAL -->
+  <section class="final">
+    <span class="leaf" style="width:260px;height:260px;right:-70px;bottom:-60px" aria-hidden="true"></span>
+    <div style="display:flex;flex-direction:column;gap:14px;position:relative;z-index:1">
+      <span class="kicker">Done when</span>
+      <h2 class="wh">You can derive <span class="g">Dir(α + N)</span> on a blank page</h2>
+      <p class="lead">…and answer the bag-of-words task with a flat prior. Next lecture: the Naive Bayes classifier, where every feature gets its own Beta or Dirichlet.</p>
+    </div>
+    <div class="box" style="position:relative;z-index:1">
+      <h3 class="h3">Revisit the earlier lectures</h3>
+      <ul>
+        <li><a href="https://stellasdeutsch-dev.github.io/prior-plus-data/">Lecture 3 · Beta-Binomial <span>→</span></a></li>
+        <li><a href="https://stellasdeutsch-dev.github.io/maxlike/">Lecture 2 · Maximum likelihood <span>→</span></a></li>
+        <li><a href="https://stellasdeutsch-dev.github.io/distribution-valley/">Lecture 1 · Distributions <span>→</span></a></li>
+      </ul>
+    </div>
+  </section>
+
+  <footer><b>▲ From coin to die</b><span>Statistical Learning · Lecture 4 · Dota 2 examples, made-up numbers</span></footer>
+</div>
+
+<script>
+(function(){
+  // rulers
+  function ruler(id,start){
+    const svg=document.getElementById(id);let s='<rect x="0" y="6" width="1200" height="66" rx="4" fill="#fbfbf9" stroke="#e2e2de"/>';
+    for(let i=0;i<=300;i++){const x=6+i*4;const big=i%10===0,mid=i%5===0;s+=`<line x1="${x}" y1="72" x2="${x}" y2="${72-(big?26:mid?18:10)}" stroke="#9a9a96" stroke-width="${big?1.6:1}"/>`;
+      if(big){const n=start+i/10;const bold=n%10===0;s+=`<text x="${x+3}" y="34" font-family="Montserrat, sans-serif" font-size="${bold?26:20}" font-weight="${bold?700:500}" fill="${bold?'#8f8f8b':'#6a6a66'}">${n}</text>`}}
+    svg.innerHTML=s;
+  }
+  ruler("ruler1",77);ruler("ruler2",107);ruler("ruler3",137);
+
+  // calculator
+  const ROLES=[["carry",9],["mid",6],["offlane",3],["soft support",2],["hard support",0]];
+  let counts=ROLES.map(r=>r[1]),alpha=1;
+  const box=document.getElementById("rolesCalc");
+  box.innerHTML=ROLES.map((r,i)=>`<div class="rolerow"><span class="nm">${r[0]}</span><span class="step"><button type="button" data-i="${i}" data-d="-1" aria-label="Fewer ${r[0]} picks">−</button><output id="c${i}">${counts[i]}</output><button type="button" data-i="${i}" data-d="1" aria-label="More ${r[0]} picks">+</button></span><span class="bars"><span class="bar post"><i id="bp${i}"></i></span><span class="bar mle"><i id="bm${i}"></i></span><small id="bt${i}"></small></span></div>`).join("");
+  box.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;const i=+b.dataset.i;counts[i]=Math.max(0,Math.min(60,counts[i]+(+b.dataset.d)));render()});
+  document.getElementById("alphaChips").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;alpha=+b.dataset.a;document.querySelectorAll("#alphaChips button").forEach(x=>x.setAttribute("aria-pressed",x===b));render()});
+  function render(){
+    const K=5,N=counts.reduce((a,b)=>a+b,0),a0=alpha*K,tot=a0+N;
+    counts.forEach((c,i)=>{
+      const post=(c+alpha)/tot,mle=N?c/N:0;
+      document.getElementById("c"+i).textContent=c;
+      document.getElementById("bp"+i).style.width=(post*100)+"%";
+      document.getElementById("bm"+i).style.width=(mle*100)+"%";
+      document.getElementById("bt"+i).textContent=`predictive ${(c+alpha)}/${tot} = ${post.toFixed(2)} · MLE ${N?mle.toFixed(2):"—"}`;
+    });
+    document.getElementById("oPost").textContent="Dir("+counts.map(c=>c+alpha).join(", ")+")";
+    document.getElementById("oSum").textContent=`${a0} + ${N} = ${tot}`;
+    document.getElementById("oHard").textContent=((counts[4]+alpha)/tot).toFixed(2);
+    document.getElementById("oHardMle").textContent=N?(counts[4]/N).toFixed(2):"—";
+    const mapDen=N+a0-K;
+    document.getElementById("oMap").textContent=mapDen>0?((counts[0]+alpha-1)/mapDen).toFixed(2):"—";
+    document.getElementById("oNote").textContent=alpha===1?"Flat prior: the MAP equals the MLE, but the predictive is still smoothed, so no role has probability 0.":`Every role starts with ${alpha} pseudo-picks (${a0} in total). The stronger the prior, the closer all predictions stay to 1/5 = 0.20.`;
+  }
+  render();
+
+  // carousel
+  const T=[
+    ["2025","Task 6(a) · bag of words","Predict the next word only from how often each word appeared. State the model, choose a prior and give the posterior. Answer: Categorical words, Dirichlet prior, posterior Dir(α + N)."],
+    ["2025","Task 5(c) · priors for Naive Bayes","Explain the advantage of the Bayesian approach for the NBC. Answer: Beta/Dirichlet priors avoid zero counts, exactly today's smoothing."],
+    ["2026","Task 4(b) · conjugate priors in NBC","Give the conjugate priors on θ and π for a Naive Bayes classifier. Answer: θ_jc ~ Beta(a, b), π ~ Dir(α)."],
+    ["2026","Task 5 · true or false","“Bag of words is a good model to predict the next word in a stream of text.” False: it ignores order; use a Markov model."]
+  ];
+  let ci=0;
+  function showC(){const t=T[ci];document.getElementById("cIdx").textContent=`${ci+1}/${T.length}`;document.getElementById("cYear").textContent=t[0];document.getElementById("cTitle").textContent=t[1];document.getElementById("cText").textContent=t[2]}
+  document.getElementById("cPrev").onclick=()=>{ci=(ci+T.length-1)%T.length;showC()};
+  document.getElementById("cNext").onclick=()=>{ci=(ci+1)%T.length;showC()};
+  showC();
+})();
+</script>
+</body>
+</html>
