@@ -276,7 +276,7 @@ footer b{font:700 12px var(--wide);letter-spacing:.06em;text-transform:uppercase
         <h2 class="wh">You will be able to</h2>
         <ul class="checks">
           <li>explain a probability vector θ and the Dirichlet distribution with a Dota example</li>
-          <li>derive the posterior Dir(α₁ + N₁, …, α_K + N_K) line by line</li>
+          <li>derive the posterior Dir(α₁ + N₁, …, α<sub>K</sub> + N<sub>K</sub>) line by line</li>
           <li>compute the posterior mean, the MAP and the predictive, and fix the zero-count problem</li>
           <li>answer the bag-of-words task from the 2025 final</li>
           <li>name the conjugate prior for Bernoulli, Categorical, Exponential and Poisson data</li>
@@ -315,10 +315,10 @@ footer b{font:700 12px var(--wide);letter-spacing:.06em;text-transform:uppercase
             <thead><tr><th></th><th>Lecture 3</th><th>Today</th></tr></thead>
             <tbody>
               <tr><td>data</td><td>hit / miss</td><td>one of K roles</td></tr>
-              <tr><td>unknown</td><td>one θ</td><td>θ₁, …, θ_K</td></tr>
+              <tr><td>unknown</td><td>one θ</td><td>θ₁, …, θ<sub>K</sub></td></tr>
               <tr><td>likelihood</td><td>Binomial</td><td>Multinomial</td></tr>
-              <tr><td>prior</td><td>Beta(a, b)</td><td>Dir(α₁, …, α_K)</td></tr>
-              <tr><td>update</td><td>a + hits, b + misses</td><td>α_k + count_k</td></tr>
+              <tr><td>prior</td><td>Beta(a, b)</td><td>Dir(α₁, …, α<sub>K</sub>)</td></tr>
+              <tr><td>update</td><td>a + hits, b + misses</td><td>α<sub>k</sub> + count<sub>k</sub></td></tr>
             </tbody>
           </table>
         </div>
@@ -334,39 +334,39 @@ footer b{font:700 12px var(--wide);letter-spacing:.06em;text-transform:uppercase
     <div class="tools">
       <article class="tool">
         <span class="tn">Tool 1 · A probability vector</span>
-        <h3 class="h3">θ = (θ₁, …, θ_K): one probability per outcome, adding to 1</h3>
-        <div class="frm">θ₁ + θ₂ + … + θ_K = 1, every θ_k ≥ 0</div>
-        <p>For the captain: θ = (θ_carry, θ_mid, θ_off, θ_soft, θ_hard), for example (0.4, 0.3, 0.15, 0.1, 0.05). The set of all such vectors is called the <b>probability simplex</b>. One draw from θ is a <b>Categorical</b> outcome.</p>
-        <details><summary>Try it: θ_carry = 0.4, θ_mid = 0.3, θ_off = 0.2, θ_soft = 0.05. What is θ_hard?</summary><div class="a"><p>1 − 0.95 = 0.05.</p></div></details>
+        <h3 class="h3">θ = (θ₁, …, θ<sub>K</sub>): one probability per outcome, adding to 1</h3>
+        <div class="frm">θ₁ + θ₂ + … + θ<sub>K</sub> = 1, every θ<sub>k</sub> ≥ 0</div>
+        <p>For the captain: θ = (θ<sub>carry</sub>, θ<sub>mid</sub>, θ<sub>off</sub>, θ<sub>soft</sub>, θ<sub>hard</sub>), for example (0.4, 0.3, 0.15, 0.1, 0.05). The set of all such vectors is called the <b>probability simplex</b>. One draw from θ is a <b>Categorical</b> outcome.</p>
+        <details><summary>Try it: θ<sub>carry</sub> = 0.4, θ<sub>mid</sub> = 0.3, θ<sub>off</sub> = 0.2, θ<sub>soft</sub> = 0.05. What is θ<sub>hard</sub>?</summary><div class="a"><p>1 − 0.95 = 0.05.</p></div></details>
       </article>
       <article class="tool">
         <span class="tn">Tool 2 · The likelihood is a product of powers</span>
         <h3 class="h3">Each match multiplies in its role's θ</h3>
-        <div class="frm">p(D | θ) = θ₁<sup>N₁</sup> · θ₂<sup>N₂</sup> · … · θ_K<sup>N_K</sup> = Π<sub>k</sub> θ_k<sup>N_k</sup></div>
-        <p>N_k is how often role k happened. Π means “multiply over all k”. Only the <b>counts</b> matter, not the order of the matches. The counts are called <b>sufficient statistics</b>: all you need to know about the data.</p>
-        <details><summary>Try it: write p(D | θ) for carry, mid, carry.</summary><div class="a"><p><span class="m">θ_carry² · θ_mid</span>.</p></div></details>
+        <div class="frm">p(D | θ) = θ₁<sup>N₁</sup> · θ₂<sup>N₂</sup> · … · θ<sub>K</sub><sup>N<sub>K</sub></sup> = Π<sub>k</sub> θ<sub>k</sub><sup>N<sub>k</sub></sup></div>
+        <p>N<sub>k</sub> is how often role k happened. Π means “multiply over all k”. Only the <b>counts</b> matter, not the order of the matches. The counts are called <b>sufficient statistics</b>: all you need to know about the data.</p>
+        <details><summary>Try it: write p(D | θ) for carry, mid, carry.</summary><div class="a"><p><span class="m">θ<sub>carry</sub>² · θ<sub>mid</sub></span>.</p></div></details>
       </article>
       <article class="tool">
         <span class="tn">Tool 3 · Constants don't matter (∝)</span>
         <h3 class="h3">The multinomial coefficient drops out</h3>
-        <div class="frm">Mult(N₁, …, N_K | θ) = N! / (N₁! ⋯ N_K!) · Π θ_k<sup>N_k</sup></div>
-        <p>If you only know the counts, the probability gets a counting factor N!/(N₁!⋯N_K!): the number of orders (like C(n, k) for a coin). It has no θ in it, so for the posterior we drop it and write ∝.</p>
+        <div class="frm">Mult(N₁, …, N<sub>K</sub> | θ) = N! / (N₁! ⋯ N<sub>K</sub>!) · Π θ<sub>k</sub><sup>N<sub>k</sub></sup></div>
+        <p>If you only know the counts, the probability gets a counting factor N!/(N₁!⋯N<sub>K</sub>!): the number of orders (like C(n, k) for a coin). It has no θ in it, so for the posterior we drop it and write ∝.</p>
       </article>
       <article class="tool">
         <span class="tn">Tool 4 · The Dirichlet distribution</span>
         <h3 class="h3">A belief about a whole probability vector</h3>
-        <div class="frm">Dir(θ | α) = (1/B(α)) · Π<sub>k</sub> θ_k<sup>α_k − 1</sup></div>
-        <p>α = (α₁, …, α_K) are positive numbers, the <b>pseudo-counts</b>: “as if I had already seen α_k − 1 picks of role k”. B(α) only makes the total 1. With K = 2 it is exactly the Beta distribution.</p>
+        <div class="frm">Dir(θ | α) = (1/B(α)) · Π<sub>k</sub> θ<sub>k</sub><sup>α<sub>k</sub> − 1</sup></div>
+        <p>α = (α₁, …, α<sub>K</sub>) are positive numbers, the <b>pseudo-counts</b>: “as if I had already seen α<sub>k</sub> − 1 picks of role k”. B(α) only makes the total 1. With K = 2 it is exactly the Beta distribution.</p>
         <details><summary>Try it: what does Dir(1, 1, 1, 1, 1) believe?</summary><div class="a"><p>Every probability vector is equally believable: the flat “no idea” prior, like Beta(1, 1).</p></div></details>
       </article>
       <article class="tool wide">
         <span class="tn">Tool 5 · Three numbers to read off a Dirichlet</span>
         <h3 class="h3">α₀, the mean and the strength</h3>
-        <div class="frm">α₀ = α₁ + … + α_K, &nbsp;&nbsp; E[θ_k] = α_k / α₀</div>
+        <div class="frm">α₀ = α₁ + … + α<sub>K</sub>, &nbsp;&nbsp; E[θ<sub>k</sub>] = α<sub>k</sub> / α₀</div>
         <p>α₀ is the <b>strength</b> of the belief (the equivalent sample size). Dir(2, 2, 2, 2, 2) and Dir(20, 20, 20, 20, 20) both have mean 1/5 for every role, but the second is worth 100 pseudo-matches and is much more certain. Same rule as Lecture 3: bigger total, narrower belief.</p>
       </article>
     </div>
-    <p class="remember"><b>Remember it:</b> θ is a list of probabilities that add to 1; the likelihood is Π θ_k<sup>N_k</sup>; the Dirichlet Π θ_k<sup>α_k−1</sup> is a belief about that list; mean α_k/α₀.</p>
+    <p class="remember"><b>Remember it:</b> θ is a list of probabilities that add to 1; the likelihood is Π θ<sub>k</sub><sup>N<sub>k</sub></sup>; the Dirichlet Π θ<sub>k</sub><sup>α<sub>k</sub>−1</sup> is a belief about that list; mean α<sub>k</sub>/α₀.</p>
   </section>
 
   <!-- PART 3 RATES -->
@@ -376,19 +376,19 @@ footer b{font:700 12px var(--wide);letter-spacing:.06em;text-transform:uppercase
     <div class="rates" style="width:100%;text-align:left">
       <div class="rate">
         <div class="ph"><span class="tag">data</span><svg viewBox="0 0 120 70" aria-hidden="true"><g fill="#3a3a3a"><rect x="10" y="30" width="16" height="36" rx="3"/><rect x="32" y="40" width="16" height="26" rx="3"/><rect x="54" y="52" width="16" height="14" rx="3"/><rect x="76" y="56" width="16" height="10" rx="3"/></g><rect x="98" y="64" width="16" height="2" rx="1" fill="#c0392b"/></svg></div>
-        <div class="bd"><h3>Likelihood</h3><div class="eq">Π θ_k<sup>N_k</sup></div><p>What the counts say. The multinomial constant drops.</p></div>
+        <div class="bd"><h3>Likelihood</h3><div class="eq">Π θ<sub>k</sub><sup>N<sub>k</sub></sup></div><p>What the counts say. The multinomial constant drops.</p></div>
       </div>
       <div class="rate">
         <div class="ph"><span class="tag">belief</span><svg viewBox="0 0 120 70" aria-hidden="true"><g fill="#7cbd7e"><rect x="10" y="40" width="16" height="26" rx="3"/><rect x="32" y="40" width="16" height="26" rx="3"/><rect x="54" y="40" width="16" height="26" rx="3"/><rect x="76" y="40" width="16" height="26" rx="3"/><rect x="98" y="40" width="16" height="26" rx="3"/></g></svg></div>
-        <div class="bd"><h3>Prior</h3><div class="eq">Π θ_k<sup>α_k − 1</sup></div><p>Dirichlet: pseudo-counts α_k before any match.</p></div>
+        <div class="bd"><h3>Prior</h3><div class="eq">Π θ<sub>k</sub><sup>α<sub>k</sub> − 1</sup></div><p>Dirichlet: pseudo-counts α<sub>k</sub> before any match.</p></div>
       </div>
       <div class="rate">
         <div class="ph"><span class="tag">updated</span><svg viewBox="0 0 120 70" aria-hidden="true"><g fill="#5fa463"><rect x="10" y="26" width="16" height="40" rx="3"/><rect x="32" y="36" width="16" height="30" rx="3"/><rect x="54" y="46" width="16" height="20" rx="3"/><rect x="76" y="50" width="16" height="16" rx="3"/><rect x="98" y="58" width="16" height="8" rx="3"/></g></svg></div>
-        <div class="bd"><h3>Posterior</h3><div class="eq">Dir(α_k + N_k)</div><p>Add each count to its α. Derivation in Part 4.</p></div>
+        <div class="bd"><h3>Posterior</h3><div class="eq">Dir(α<sub>k</sub> + N<sub>k</sub>)</div><p>Add each count to its α. Derivation in Part 4.</p></div>
       </div>
       <div class="rate">
         <div class="ph"><span class="tag">next match</span><svg viewBox="0 0 120 70" aria-hidden="true"><circle cx="60" cy="38" r="24" fill="none" stroke="#3a3a3a" stroke-width="6"/><path d="M60 38 L60 20 M60 38 L74 46" stroke="#5fa463" stroke-width="6" stroke-linecap="round"/></svg></div>
-        <div class="bd"><h3>Predictive</h3><div class="eq">(α_k + N_k)/(α₀ + N)</div><p>Chance that the next pick is role k. Never exactly 0.</p></div>
+        <div class="bd"><h3>Predictive</h3><div class="eq">(α<sub>k</sub> + N<sub>k</sub>)/(α₀ + N)</div><p>Chance that the next pick is role k. Never exactly 0.</p></div>
       </div>
     </div>
   </section>
@@ -398,13 +398,13 @@ footer b{font:700 12px var(--wide);letter-spacing:.06em;text-transform:uppercase
   <!-- PART 4 DERIVATION -->
   <section class="section" id="derive">
     <span class="kicker">Part 4 · The derivation</span>
-    <h2 class="wh">Prior Dir(α) <span class="g">+ counts N₁, …, N_K</span></h2>
+    <h2 class="wh">Prior Dir(α) <span class="g">+ counts N₁, …, N<sub>K</sub></span></h2>
     <div class="derive">
       <div class="drow"><span class="k">Bayes</span><span class="eq">p(θ | D) ∝ p(D | θ) · p(θ)</span><span class="why">posterior ∝ likelihood × prior; the bottom line p(D) has no θ</span></div>
-      <div class="drow"><span class="k">plug in</span><span class="eq">∝ Π<sub>k</sub> θ_k<sup>N_k</sup> · Π<sub>k</sub> θ_k<sup>α_k − 1</sup></span><span class="why">Tool 2 times Tool 4; constants dropped (Tool 3)</span></div>
-      <div class="drow"><span class="k">same base</span><span class="eq">= Π<sub>k</sub> θ_k<sup>N_k</sup> θ_k<sup>α_k − 1</sup></span><span class="why">put the two θ_k of each role next to each other</span></div>
-      <div class="drow"><span class="k">add powers</span><span class="eq">= Π<sub>k</sub> θ_k<sup>α_k + N_k − 1</sup></span><span class="why">θ<sup>a</sup>θ<sup>b</sup> = θ<sup>a+b</sup></span></div>
-      <div class="drow ans"><span class="k">read off</span><span class="eq">θ | D ~ Dir(α₁ + N₁, …, α_K + N_K)</span><span class="why">a Dirichlet shape with new exponents (+1)</span></div>
+      <div class="drow"><span class="k">plug in</span><span class="eq">∝ Π<sub>k</sub> θ<sub>k</sub><sup>N<sub>k</sub></sup> · Π<sub>k</sub> θ<sub>k</sub><sup>α<sub>k</sub> − 1</sup></span><span class="why">Tool 2 times Tool 4; constants dropped (Tool 3)</span></div>
+      <div class="drow"><span class="k">same base</span><span class="eq">= Π<sub>k</sub> θ<sub>k</sub><sup>N<sub>k</sub></sup> θ<sub>k</sub><sup>α<sub>k</sub> − 1</sup></span><span class="why">put the two θ<sub>k</sub> of each role next to each other</span></div>
+      <div class="drow"><span class="k">add powers</span><span class="eq">= Π<sub>k</sub> θ<sub>k</sub><sup>α<sub>k</sub> + N<sub>k</sub> − 1</sup></span><span class="why">θ<sup>a</sup>θ<sup>b</sup> = θ<sup>a+b</sup></span></div>
+      <div class="drow ans"><span class="k">read off</span><span class="eq">θ | D ~ Dir(α₁ + N₁, …, α<sub>K</sub> + N<sub>K</sub>)</span><span class="why">a Dirichlet shape with new exponents (+1)</span></div>
     </div>
     <div class="twocol">
       <div class="prose">
@@ -417,7 +417,7 @@ footer b{font:700 12px var(--wide);letter-spacing:.06em;text-transform:uppercase
         <p class="note2">α₀ after the update = 25 = 5 (prior) + 20 (matches).</p>
       </div>
     </div>
-    <p class="remember"><b>Remember it:</b> Dirichlet prior × multinomial likelihood = Dirichlet posterior: α_k + N_k.</p>
+    <p class="remember"><b>Remember it:</b> Dirichlet prior × multinomial likelihood = Dirichlet posterior: α<sub>k</sub> + N<sub>k</sub>.</p>
   </section>
 
   <!-- CALCULATOR -->
@@ -454,15 +454,15 @@ footer b{font:700 12px var(--wide);letter-spacing:.06em;text-transform:uppercase
   <section class="section" id="numbers">
     <span class="kicker">Part 6 · Three numbers from the posterior</span>
     <h2 class="wh">Mean, MAP, MLE <span class="g">for each role</span></h2>
-    <p class="lead">Write the posterior as Dir(α′) with α′_k = α_k + N_k and α′₀ = α₀ + N. Then, for each role k:</p>
+    <p class="lead">Write the posterior as Dir(α′) with α′<sub>k</sub> = α<sub>k</sub> + N<sub>k</sub> and α′₀ = α₀ + N. Then, for each role k:</p>
     <div class="cmp">
-      <div class="c"><span class="t">Posterior mean</span><span class="frm">(α_k + N_k) / (α₀ + N)</span><p>The balance point. It is also the <b>predictive</b>: the chance that the next pick is role k.</p></div>
-      <div class="c"><span class="t">MAP (peak)</span><span class="frm">(N_k + α_k − 1) / (N + α₀ − K)</span><p>The single most believable vector. Like the MLE with α_k − 1 pseudo-counts added.</p></div>
-      <div class="c"><span class="t">MLE</span><span class="frm">N_k / N</span><p>Data only. With a flat prior (all α_k = 1) the MAP equals the MLE.</p></div>
+      <div class="c"><span class="t">Posterior mean</span><span class="frm">(α<sub>k</sub> + N<sub>k</sub>) / (α₀ + N)</span><p>The balance point. It is also the <b>predictive</b>: the chance that the next pick is role k.</p></div>
+      <div class="c"><span class="t">MAP (peak)</span><span class="frm">(N<sub>k</sub> + α<sub>k</sub> − 1) / (N + α₀ − K)</span><p>The single most believable vector. Like the MLE with α<sub>k</sub> − 1 pseudo-counts added.</p></div>
+      <div class="c"><span class="t">MLE</span><span class="frm">N<sub>k</sub> / N</span><p>Data only. With a flat prior (all α<sub>k</sub> = 1) the MAP equals the MLE.</p></div>
     </div>
     <div class="tablewrap">
       <table class="table">
-        <thead><tr><th>role</th><th>count</th><th>MLE N_k/N</th><th>mean, α = 1</th><th>mean, α = 2</th><th>MAP, α = 2</th></tr></thead>
+        <thead><tr><th>role</th><th>count</th><th>MLE N<sub>k</sub>/N</th><th>mean, α = 1</th><th>mean, α = 2</th><th>MAP, α = 2</th></tr></thead>
         <tbody>
           <tr><td>carry</td><td>9</td><td>0.45</td><td>10/25 = 0.40</td><td>11/30 ≈ 0.37</td><td>10/25 = 0.40</td></tr>
           <tr><td>mid</td><td>6</td><td>0.30</td><td>7/25 = 0.28</td><td>8/30 ≈ 0.27</td><td>7/25 = 0.28</td></tr>
@@ -474,13 +474,13 @@ footer b{font:700 12px var(--wide);letter-spacing:.06em;text-transform:uppercase
     </div>
     <div class="twocol">
       <div class="prose">
-        <p><b>Where does the MAP formula come from?</b> You maximise <span class="m">Σ (N_k + α_k − 1) log θ_k</span>, but the θ's must add up to 1, so you can't move each one freely. The slides handle this with a <b>Lagrange multiplier</b> λ, a trick for “maximise under a constraint”. The result is θ_k ∝ N_k + α_k − 1, then you divide by the total so everything adds to 1. That total is N + α₀ − K.</p>
+        <p><b>Where does the MAP formula come from?</b> You maximise <span class="m">Σ (N<sub>k</sub> + α<sub>k</sub> − 1) log θ<sub>k</sub></span>, but the θ's must add up to 1, so you can't move each one freely. The slides handle this with a <b>Lagrange multiplier</b> λ, a trick for “maximise under a constraint”. The result is θ<sub>k</sub> ∝ N<sub>k</sub> + α<sub>k</sub> − 1, then you divide by the total so everything adds to 1. That total is N + α₀ − K.</p>
       </div>
       <div class="prose">
-        <p><b>Why is the predictive the posterior mean?</b> Lump all other roles into “not k”. Then θ_k behaves like a coin's probability, with a Beta(α′_k, α′₀ − α′_k) belief. The chance of “k” next is that Beta's mean, α′_k/α′₀. Exactly Lecture 3's rule.</p>
+        <p><b>Why is the predictive the posterior mean?</b> Lump all other roles into “not k”. Then θ<sub>k</sub> behaves like a coin's probability, with a Beta(α′<sub>k</sub>, α′₀ − α′<sub>k</sub>) belief. The chance of “k” next is that Beta's mean, α′<sub>k</sub>/α′₀. Exactly Lecture 3's rule.</p>
       </div>
     </div>
-    <p class="remember"><b>Remember it:</b> predictive = (α_k + N_k)/(α₀ + N). With α_k = 1 this is <b>add-one smoothing</b>: no outcome is ever impossible.</p>
+    <p class="remember"><b>Remember it:</b> predictive = (α<sub>k</sub> + N<sub>k</sub>)/(α₀ + N). With α<sub>k</sub> = 1 this is <b>add-one smoothing</b>: no outcome is ever impossible.</p>
   </section>
 
   <!-- ROLES (team) -->
@@ -517,7 +517,7 @@ footer b{font:700 12px var(--wide);letter-spacing:.06em;text-transform:uppercase
       <span class="kicker">The follow-up questions on the same exam</span>
       <p>2025 Task 6(b) asked: if the next word should depend on the <b>last</b> word, what model is that? A <b>Markov chain</b> (Day 15). And the 2026 true/false: “bag of words is a good model to predict the next word in a stream of text” is <b>false</b>: it ignores order.</p>
     </div>
-    <p class="remember"><b>Remember it:</b> bag of words = Categorical words, Dirichlet prior, posterior α + counts, predictive (α_k + N_k)/(α₀ + N).</p>
+    <p class="remember"><b>Remember it:</b> bag of words = Categorical words, Dirichlet prior, posterior α + counts, predictive (α<sub>k</sub> + N<sub>k</sub>)/(α₀ + N).</p>
   </section>
 
   <div class="rulerwrap" aria-hidden="true"><svg class="ruler" id="ruler3" viewBox="0 0 1200 78"></svg></div>
@@ -529,7 +529,7 @@ footer b{font:700 12px var(--wide);letter-spacing:.06em;text-transform:uppercase
     <div class="twocol">
       <div class="prose">
         <p>Sometimes the task gives you θ and asks for the probability of a set of counts. Suppose the captain's first picks are carry 0.3, mid 0.3, offlane 0.2, support 0.2. What is the chance of exactly 4 carries, 3 mids, 1 offlane and 2 supports in 10 matches?</p>
-        <div class="frm">P = N! / (N₁! N₂! ⋯ N_K!) · θ₁<sup>N₁</sup> ⋯ θ_K<sup>N_K</sup></div>
+        <div class="frm">P = N! / (N₁! N₂! ⋯ N<sub>K</sub>!) · θ₁<sup>N₁</sup> ⋯ θ<sub>K</sub><sup>N<sub>K</sub></sup></div>
         <p>The fraction counts how many orders give these counts; the product is the chance of one such order.</p>
       </div>
       <div class="derive">
@@ -551,7 +551,7 @@ footer b{font:700 12px var(--wide);letter-spacing:.06em;text-transform:uppercase
         <tbody>
           <tr><td>Bernoulli / Binomial: k hits in n</td><td>Beta(a, b)</td><td>Beta(a + k, b + n − k)</td><td>Mirana arrows</td></tr>
           <tr><td>Geometric: losses kᵢ before a win</td><td>Beta(a, b)</td><td>Beta(a + n, b + Σkᵢ)</td><td>games before a win</td></tr>
-          <tr class="hl"><td>Categorical / Multinomial: counts N_k</td><td>Dir(α)</td><td>Dir(α + N)</td><td>first-pick role, chat words</td></tr>
+          <tr class="hl"><td>Categorical / Multinomial: counts N<sub>k</sub></td><td>Dir(α)</td><td>Dir(α + N)</td><td>first-pick role, chat words</td></tr>
           <tr><td>Exponential: waits xᵢ</td><td>Gamma(a, b)</td><td>Gamma(a + n, b + Σxᵢ)</td><td>minutes between ganks</td></tr>
           <tr><td>Poisson: counts xᵢ</td><td>Gamma(a, b)</td><td>Gamma(a + Σxᵢ, b + n)</td><td>kills per game</td></tr>
           <tr><td>Gaussian mean (σ² known)</td><td>Gaussian</td><td>Gaussian (Day 8)</td><td>last hits</td></tr>
@@ -589,18 +589,18 @@ footer b{font:700 12px var(--wide);letter-spacing:.06em;text-transform:uppercase
     <h2 class="wh">Six traps <span class="g">and five questions</span></h2>
     <div class="traps">
       <div class="trap"><b>Trap 1 · <em>α₀ vs N</em></b><span>The predictive divides by α₀ + N (prior total + data total), not by N.</span></div>
-      <div class="trap"><b>Trap 2 · <em>MAP has −K</em></b><span>MAP: (N_k + α_k − 1)/(N + α₀ − K). The −1 is per role, so the bottom loses K.</span></div>
+      <div class="trap"><b>Trap 2 · <em>MAP has −K</em></b><span>MAP: (N<sub>k</sub> + α<sub>k</sub> − 1)/(N + α₀ − K). The −1 is per role, so the bottom loses K.</span></div>
       <div class="trap"><b>Trap 3 · <em>Order is ignored</em></b><span>Bag of words throws away word order. For “next word after this word” use a Markov chain.</span></div>
-      <div class="trap"><b>Trap 4 · <em>Constants</em></b><span>N!/(N₁!⋯N_K!) matters for the probability of counts, but not for the posterior shape.</span></div>
+      <div class="trap"><b>Trap 4 · <em>Constants</em></b><span>N!/(N₁!⋯N<sub>K</sub>!) matters for the probability of counts, but not for the posterior shape.</span></div>
       <div class="trap"><b>Trap 5 · <em>K = 2</em></b><span>A Dirichlet with two components is a Beta. Don't learn two theories.</span></div>
-      <div class="trap"><b>Trap 6 · <em>Flat prior</em></b><span>Dir(1, …, 1): MAP = MLE, but the predictive is still smoothed: (N_k + 1)/(N + K).</span></div>
+      <div class="trap"><b>Trap 6 · <em>Flat prior</em></b><span>Dir(1, …, 1): MAP = MLE, but the predictive is still smoothed: (N<sub>k</sub> + 1)/(N + K).</span></div>
     </div>
     <h3 class="h3">Explain it back. Answer out loud first.</h3>
     <div class="faq">
-      <details><summary>What is a Dirichlet distribution, in one sentence?</summary><div class="a"><p>A belief about a whole list of probabilities that add to 1, shaped like Π θ_k<sup>α_k−1</sup>, where α_k act as pseudo-counts.</p></div></details>
-      <details><summary>Why do the counts get added to α?</summary><div class="a"><p>Likelihood Π θ_k<sup>N_k</sup> times prior Π θ_k<sup>α_k−1</sup>: powers of the same θ_k add, giving θ_k<sup>α_k+N_k−1</sup>, a Dirichlet with α_k + N_k.</p></div></details>
-      <details><summary>How does the Dirichlet fix the zero-count problem?</summary><div class="a"><p>The predictive is (α_k + N_k)/(α₀ + N). Even with N_k = 0, α_k &gt; 0 keeps it above zero: hard support gets 1/25, not 0.</p></div></details>
-      <details><summary>What is the link between Dirichlet and Beta?</summary><div class="a"><p>Beta is the Dirichlet with K = 2. And any single component θ_j of a Dirichlet follows Beta(α_j, α₀ − α_j).</p></div></details>
+      <details><summary>What is a Dirichlet distribution, in one sentence?</summary><div class="a"><p>A belief about a whole list of probabilities that add to 1, shaped like Π θ<sub>k</sub><sup>α<sub>k</sub>−1</sup>, where α<sub>k</sub> act as pseudo-counts.</p></div></details>
+      <details><summary>Why do the counts get added to α?</summary><div class="a"><p>Likelihood Π θ<sub>k</sub><sup>N<sub>k</sub></sup> times prior Π θ<sub>k</sub><sup>α<sub>k</sub>−1</sup>: powers of the same θ<sub>k</sub> add, giving θ<sub>k</sub><sup>α<sub>k</sub>+N<sub>k</sub>−1</sup>, a Dirichlet with α<sub>k</sub> + N<sub>k</sub>.</p></div></details>
+      <details><summary>How does the Dirichlet fix the zero-count problem?</summary><div class="a"><p>The predictive is (α<sub>k</sub> + N<sub>k</sub>)/(α₀ + N). Even with N<sub>k</sub> = 0, α<sub>k</sub> &gt; 0 keeps it above zero: hard support gets 1/25, not 0.</p></div></details>
+      <details><summary>What is the link between Dirichlet and Beta?</summary><div class="a"><p>Beta is the Dirichlet with K = 2. And any single component θ<sub>j</sub> of a Dirichlet follows Beta(α<sub>j</sub>, α₀ − α<sub>j</sub>).</p></div></details>
       <details><summary>What does “conjugate prior” mean, and name three pairs.</summary><div class="a"><p>Same family before and after the update. Beta–Binomial, Dirichlet–Multinomial, Gamma–Exponential (or Gamma–Poisson).</p></div></details>
     </div>
   </section>
@@ -621,22 +621,22 @@ footer b{font:700 12px var(--wide);letter-spacing:.06em;text-transform:uppercase
         <div class="ptop"><span class="pn">02</span><span class="lvl l1">Easy</span></div>
         <h3 class="h3">Reading a Dirichlet</h3>
         <p>(a) What is Dir(a, b) with K = 2? (b) Compare Dir(1, 1, 1) and Dir(10, 10, 10): mean and certainty. (c) Mean of θ₁ under Dir(6, 3, 1)?</p>
-        <details><summary>Hint</summary><div class="a"><p>Mean α_k/α₀; α₀ is the strength.</p></div></details>
+        <details><summary>Hint</summary><div class="a"><p>Mean α<sub>k</sub>/α₀; α₀ is the strength.</p></div></details>
         <details><summary>Solution</summary><div class="a"><ul class="steps-l"><li>(a) Beta(a, b)</li><li>(b) Both have mean 1/3 for each part; Dir(10, 10, 10) is worth 30 pseudo-observations and is much more certain.</li><li>(c) 6/10 = 0.6</li></ul></div></details>
       </article>
       <article class="prob">
         <div class="ptop"><span class="pn">03</span><span class="lvl l2">Medium</span></div>
         <h3 class="h3">Power runes at 6:00</h3>
         <p>You track 4 rune types (DD, haste, illusion, regen) over 12 games: 5, 4, 3, 0. (a) MLE for regen? (b) With Dir(1, 1, 1, 1), the chance the next rune is regen?</p>
-        <details><summary>Hint</summary><div class="a"><p>(N_k + 1)/(N + K).</p></div></details>
+        <details><summary>Hint</summary><div class="a"><p>(N<sub>k</sub> + 1)/(N + K).</p></div></details>
         <details><summary>Solution</summary><div class="a"><ul class="steps-l"><li>(a) 0/12 = 0, “regen never spawns”</li><li>(b) Posterior Dir(6, 5, 4, 1), predictive 1/16 ≈ 0.06</li></ul></div></details>
       </article>
       <article class="prob">
         <div class="ptop"><span class="pn">04</span><span class="lvl l2">Medium</span></div>
         <h3 class="h3">MAP versus mean</h3>
-        <p>Captain counts 9, 6, 3, 2, 0 with prior α_k = 2 for all five roles. Compute the MAP and the posterior mean for carry and hard support.</p>
+        <p>Captain counts 9, 6, 3, 2, 0 with prior α<sub>k</sub> = 2 for all five roles. Compute the MAP and the posterior mean for carry and hard support.</p>
         <details><summary>Hint</summary><div class="a"><p>N = 20, α₀ = 10, K = 5.</p></div></details>
-        <details><summary>Solution</summary><div class="a"><ul class="steps-l"><li>MAP: (N_k + 1)/25 → carry 10/25 = 0.40, hard 1/25 = 0.04</li><li>Mean: (N_k + 2)/30 → carry 11/30 ≈ 0.37, hard 2/30 ≈ 0.07</li></ul></div></details>
+        <details><summary>Solution</summary><div class="a"><ul class="steps-l"><li>MAP: (N<sub>k</sub> + 1)/25 → carry 10/25 = 0.40, hard 1/25 = 0.04</li><li>Mean: (N<sub>k</sub> + 2)/30 → carry 11/30 ≈ 0.37, hard 2/30 ≈ 0.07</li></ul></div></details>
       </article>
       <article class="prob">
         <div class="ptop"><span class="pn">05</span><span class="lvl l2">Medium · Week 3 Q3</span></div>
@@ -662,8 +662,8 @@ footer b{font:700 12px var(--wide);letter-spacing:.06em;text-transform:uppercase
       <article class="prob">
         <div class="ptop"><span class="pn">08</span><span class="lvl l4">Challenge</span></div>
         <h3 class="h3">One role versus the rest</h3>
-        <p>Posterior Dir(10, 7, 4, 3, 1). (a) Which Beta describes θ_carry alone? (b) Use it to get P(next pick = carry). (c) P(the next two picks are both carry)?</p>
-        <details><summary>Hint</summary><div class="a"><p>Lump the others into “not carry”: α′₀ − α′_carry = 15.</p></div></details>
+        <p>Posterior Dir(10, 7, 4, 3, 1). (a) Which Beta describes θ<sub>carry</sub> alone? (b) Use it to get P(next pick = carry). (c) P(the next two picks are both carry)?</p>
+        <details><summary>Hint</summary><div class="a"><p>Lump the others into “not carry”: α′₀ − α′<sub>carry</sub> = 15.</p></div></details>
         <details><summary>Solution</summary><div class="a"><ul class="steps-l"><li>(a) Beta(10, 15)</li><li>(b) 10/25 = 0.40</li><li>(c) 10/25 · 11/26 ≈ 0.169 (update after the first carry, as in Lecture 3)</li></ul></div></details>
       </article>
     </div>
